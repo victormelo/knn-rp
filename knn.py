@@ -2,8 +2,6 @@
 
 import numpy as np
 from scipy.io.arff import loadarff
-from collections import Counter
-
 
 def knn(Xt, Y, X, k=3):
     # input: Xt, amostras a serem classificadas
@@ -11,7 +9,6 @@ def knn(Xt, Y, X, k=3):
     #        X, Amostras de treinamento
     #        k, n. de vizinhos do classificador k-NN
     # output: Ytest, labels previstas para as amostras Xt
-
     h, w = Xt.shape
     Ytest = np.empty((h,), '|S15')
 
@@ -20,16 +17,15 @@ def knn(Xt, Y, X, k=3):
 
         # calculo da distância euclidiana de cada amostra de treino X
         # com a i amostra de teste
-        difference = np.abs(
-            X.astype(np.float64) - Xt[i].astype(np.float64)) ** 2
+        difference = (X - Xt[i]) ** 2
         dist = np.sqrt(np.sum(difference, axis=1))
 
         # os k indices com menor distância
         k_indices = np.argsort(dist)[:k]
+        labels = list(Y[k_indices])
+        mode = max(labels, key=labels.count)
+        Ytest[i] = mode
 
-        # coloca na amostra i o label que mais se repete dentro dos k labels
-        [(label, times)] = Counter(Y[k_indices]).most_common(1)
-        Ytest[i] = label
 
     return Ytest
 
@@ -48,8 +44,8 @@ def convert_to_numpy_array(list_of_tuples):
 
 if __name__ == '__main__':
 
-    train, meta = loadarff(open('iris-train.arff', 'r'))
-    test, meta = loadarff(open('iris-test.arff', 'r'))
+    train, meta = loadarff(open('vehicle-train.arff', 'r'))
+    test, meta = loadarff(open('vehicle-test.arff', 'r'))
 
     # amostras de treinamento
     X = convert_to_numpy_array(train)
@@ -63,8 +59,10 @@ if __name__ == '__main__':
     # label que pertece as amostras de teste, usada para calcular a accuracy
     Yt = test['class']
 
-    # myYt são as classes previstas
+    # myYt_k3 são as classes previstas para k=3
     myYt = knn(Xt, Y, X)
 
-    certos = (myYt == Yt).sum()
-    print 'Accuracy: %.4f%%' % (certos / float(myYt.size) * 100)
+    certos_k3 = (myYt == Yt).sum()
+    print 'Correct classified %d\n' % certos_k3
+    print 'Accuracy k=3: %.4f%%' % (certos_k3 / float(myYt.size) * 100)
+
